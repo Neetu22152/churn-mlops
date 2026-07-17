@@ -1,19 +1,5 @@
-"""
-Generates a synthetic customer-churn dataset that mirrors the structure of the
-well-known Telco Customer Churn dataset (IBM / Kaggle). Use this for local
-development and pipeline testing when you don't yet have the real dataset
-wired in.
-
-To use the REAL dataset instead:
-  1. Download "Telco Customer Churn" from Kaggle:
-     https://www.kaggle.com/datasets/blastchar/telco-customer-churn
-  2. Save it as data/raw/telco_churn.csv
-  3. Point src/ingestion/load_data.py at that file (see load_data.py).
-
-Run:
-    python src/ingestion/generate_synthetic_data.py --n_rows 5000 --out data/raw/telco_churn.csv
-"""
 import argparse
+from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -87,6 +73,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     df = generate(args.n_rows, args.seed)
-    df.to_csv(args.out, index=False)
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(out_path, index=False)
     print(f"Wrote {len(df)} rows to {args.out}")
     print(f"Churn rate: {df['churn'].mean():.2%}")

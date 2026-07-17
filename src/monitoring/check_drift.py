@@ -1,18 +1,4 @@
-"""
-Data drift monitoring using Evidently AI.
 
-The idea: periodically (e.g. via a scheduled Airflow/cron job) compare
-recent "production" data against the training reference data. If the
-distributions have drifted meaningfully, that's a signal the model may need
-retraining — this is the crux of what separates an MLOps pipeline from a
-one-off trained model.
-
-Run:
-    python -m src.monitoring.check_drift --current data/raw/telco_churn_recent.csv
-
-In production this would run on a schedule and push `drift_detected` to an
-alerting channel (Slack/email/PagerDuty) rather than just printing it.
-"""
 import argparse
 import json
 from pathlib import Path
@@ -55,11 +41,7 @@ def check_drift(current_data_path: str, reference_data_path: Path = REFERENCE_DA
 
 
 def _simple_drift_check(current_data_path: str, reference_data_path: Path, threshold: float = 0.15):
-    """Lightweight fallback: flag drift if any numeric column's mean has
-    shifted by more than `threshold` (as a fraction of the reference mean).
-    Not a substitute for Evidently's statistical tests, but useful when the
-    package isn't available and something is still better than nothing.
-    """
+    
     reference = pd.read_csv(reference_data_path)
     current = pd.read_csv(current_data_path)
 
