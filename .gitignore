@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 mlruns/
+mlflow.db
 monitoring_reports/
 *.egg-info/
 .venv/
@@ -9,3 +10,4 @@ venv/
 .env
 .DS_Store
 models/*.pkl
+data/raw/*.csv
