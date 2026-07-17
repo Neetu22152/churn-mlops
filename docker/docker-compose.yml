@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  churn-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../models:/app/models
+    restart: unless-stopped
+
+  mlflow:
+    image: python:3.11-slim
+    working_dir: /mlflow
+    volumes:
+      - ../mlruns:/mlflow/mlruns
+    ports:
+      - "5000:5000"
+    command: >
+      bash -c "pip install --no-cache-dir mlflow &&
+      mlflow ui --host 0.0.0.0 --port 5000 --backend-store-uri /mlflow/mlruns"

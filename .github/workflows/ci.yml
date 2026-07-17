@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate synthetic data for tests
+        run: python src/ingestion/generate_synthetic_data.py --n_rows 500 --out data/raw/telco_churn.csv
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+      - name: Lint (flake8)
+        run: |
+          pip install flake8
+          flake8 src/ --max-line-length=110 --extend-ignore=E203,W503
+
+  train-and-build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate data and train model
+        run: |
+          python src/ingestion/generate_synthetic_data.py --out data/raw/telco_churn.csv
+          python -m src.training.train --model xgboost
+
+      - name: Build Docker image
+        run: docker build -f docker/Dockerfile -t churn-api:${{ github.sha }} .
+
+      # In a real deployment, add a step here to push the image to a
+      # registry (ECR/GHCR) and trigger a deploy (Render/Railway/k8s).
